@@ -6,6 +6,8 @@ build-backend = "flit.buildapi"
 module = "pogrep"
 author = "Julien Palard"
 author-email = "julien@palard.fr"
+requires = [
+  "regex",
+]
 home-page = "https://github.com/JulienPalard/pogrep"
 classifiers = ["License :: OSI Approved :: MIT License"]
-
