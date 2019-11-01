@@ -9,6 +9,7 @@ author-email = "julien@palard.fr"
 requires = [
   "regex",
   "polib",
+  "tabulate",
 ]
 home-page = "https://github.com/JulienPalard/pogrep"
 classifiers = ["License :: OSI Approved :: MIT License"]
