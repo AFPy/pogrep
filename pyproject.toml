@@ -13,3 +13,6 @@ requires = [
 ]
 home-page = "https://github.com/JulienPalard/pogrep"
 classifiers = ["License :: OSI Approved :: MIT License"]
+
+[tool.flit.scripts]
+pogrep = "pogrep:main"

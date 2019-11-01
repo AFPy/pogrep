@@ -5,6 +5,7 @@
 __version__ = "0.0.1"
 
 import argparse
+import curses
 from glob import glob
 import os
 from textwrap import fill
@@ -14,25 +15,50 @@ import polib
 from tabulate import tabulate
 
 
+def red_color():
+    """Just returns the CSI codes for red and reset color.
+    """
+    try:
+        curses.setupterm()
+        fg_color = curses.tigetstr("setaf") or curses.tigetstr("setf") or ""
+        red = str(curses.tparm(fg_color, 1), "ascii")
+        no_color = str(curses.tigetstr("sgr0"), "ascii")
+    except Exception:
+        red = ""
+        no_color = ""
+    return red, no_color
+
+
+RED, NO_COLOR = red_color()
+
+
+def get_term_width():
+    scr = curses.initscr()
+    width = scr.getmaxyx()[1]
+    curses.endwin()
+    return width
+
+
+WIDTH = get_term_width()
+
+
+def colorize(text, pattern):
+    return regex.sub(pattern, RED + pattern + NO_COLOR, text)
+
+
 def find_in_po(pattern):
     table = []
-    try:
-        _, columns = os.popen("stty size", "r").read().split()
-        available_width = int(columns) // 2 - 3
-    except:
-        available_width = 80 // 2 - 3
-
     for file in glob("**/*.po"):
         pofile = polib.pofile(file)
         for entry in pofile:
             if entry.msgstr and regex.search(pattern, entry.msgid):
                 table.append(
                     [
-                        fill(entry.msgid, width=available_width),
-                        fill(entry.msgstr, width=available_width),
+                        fill(entry.msgid, width=(WIDTH - 7) // 2),
+                        fill(entry.msgstr, width=(WIDTH - 7) // 2),
                     ]
                 )
-    print(tabulate(table, tablefmt="fancy_grid"))
+    print(colorize(tabulate(table, tablefmt="fancy_grid"), pattern))
 
 
 def parse_args():
