@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""Find translations exemples by grepping in .po files.
+"""
+
+__version__ = "0.0.1"
 
 import argparse
 from glob import glob
