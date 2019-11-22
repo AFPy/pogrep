@@ -2,7 +2,7 @@
 """Find translations exemples by grepping in .po files.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 import argparse
 import curses
