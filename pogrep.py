@@ -43,7 +43,7 @@ WIDTH = get_term_width()
 
 
 def colorize(text, pattern):
-    return regex.sub(pattern, RED + pattern + NO_COLOR, text)
+    return regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, text)
 
 
 def find_in_po(pattern):
