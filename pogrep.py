@@ -64,7 +64,7 @@ def find_in_po(pattern, path, linenum, file_match):
     prefixes = []
     for file in path[0]:
         try:
-            pofile = polib.pofile(file)
+            pofile = polib.pofile(file.name)
         except OSError:
             print("{} doesn't seem to be a .po file".format(file), file=sys.stderr)
             continue
@@ -81,7 +81,6 @@ def find_in_po(pattern, path, linenum, file_match):
                     else:
                         pfile = ""
                     left = pfile + pnum + left
-                if linenum:
                     prefixes.append((pnum, pfile))
                 table.append(
                     [
@@ -105,14 +104,12 @@ def parse_args():
                         help="Suppress normal output; instead print the name of each input file from which output "
                              "would normally have been printed.  The scanning will stop on the first match.")
     parser.add_argument("pattern")
-    parser.add_argument("path", action="append", nargs=argparse.REMAINDER)
+    parser.add_argument("path", action="append", type=argparse.FileType('r'), nargs='+')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    if args.path is None:
-        args.path = glob("**/*.po")
     if args.word_regexp:
         args.pattern = r"\b" + args.pattern + r"\b"
     if args.ignore_case:
