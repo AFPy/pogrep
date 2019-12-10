@@ -114,8 +114,7 @@ def parse_args():
 def main():
     args = parse_args()
     if args.fixed_strings:
-        for car in "\.^$*+?{}[]|()":
-            args.pattern = args.pattern.replace(car, "\\" + car)
+        args.pattern = regex.escape(args.pattern)
     if args.word_regexp:
         args.pattern = r"\b" + args.pattern + r"\b"
     if args.ignore_case:
