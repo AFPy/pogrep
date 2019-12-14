@@ -48,16 +48,15 @@ WIDTH = get_term_width()
 
 
 def colorize(text, pattern, prefixes):
-    # FIXME: pattern colorization breaks prefixes colorization if pattern in prefix
-    result = text
+    result = regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, text)
     for pnum, pfile in prefixes:
-        if pfile:
-            prefix = "( " + pfile + ")(" + pnum + ")"
-            result = regex.sub(prefix, MAGENTA + r"\g<1>" + GREEN + r"\g<2>" + NO_COLOR, result)
-        else:
-            prefix = " " + pnum
-            result = regex.sub(prefix, GREEN + r"\g<0>" + NO_COLOR, result)
-    return regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, result)
+        prefix = " " + pfile + pnum
+        prefix_colored = regex.escape(regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, prefix))
+        if regex.escape(RED) in prefix_colored:
+            prefix = prefix_colored
+        prefix_replace = " " + MAGENTA + pfile + GREEN + pnum + NO_COLOR
+        result = regex.sub(prefix, prefix_replace, result, count=1)
+    return result
 
 
 def find_in_po(pattern, path, linenum, file_match, no_messages):
@@ -99,7 +98,7 @@ def process_path(path, recursive, exclude_dir):
     if len(path) == 0:
         if recursive:
             files = glob.glob("**/*.po", recursive=True)
-            if exclude_dir :
+            if exclude_dir:
                 return [elt for elt in files if exclude_dir.rstrip(os.sep) + os.sep not in elt]
             else:
                 return files
