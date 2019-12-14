@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Find translations exemples by grepping in .po files.
+"""Find translations examples by grepping in .po files.
 """
 
 __version__ = "0.1.1"
 
 import argparse
 import curses
+import glob
+import os
 import sys
 from textwrap import fill
 import regex
@@ -46,7 +48,8 @@ WIDTH = get_term_width()
 
 
 def colorize(text, pattern, prefixes):
-    result = regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, text)
+    # FIXME: pattern colorization breaks prefixes colorization if pattern in prefix
+    result = text
     for pnum, pfile in prefixes:
         if pfile:
             prefix = "( " + pfile + ")(" + pnum + ")"
@@ -54,29 +57,29 @@ def colorize(text, pattern, prefixes):
         else:
             prefix = " " + pnum
             result = regex.sub(prefix, GREEN + r"\g<0>" + NO_COLOR, result)
-    return result
+    return regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, result)
 
 
 def find_in_po(pattern, path, linenum, file_match, no_messages):
     table = []
     prefixes = []
-    for file in path[0]:
+    for filename in path:
         try:
-            pofile = polib.pofile(file.name)
+            pofile = polib.pofile(filename)
         except OSError:
             if not no_messages:
-                print("{} doesn't seem to be a .po file".format(file.name), file=sys.stderr)
+                print("{} doesn't seem to be a .po file".format(filename), file=sys.stderr)
             continue
         for entry in pofile:
             if entry.msgstr and regex.search(pattern, entry.msgid):
                 if file_match:
-                    print(MAGENTA + file.name + NO_COLOR)
+                    print(MAGENTA + filename + NO_COLOR)
                     break
                 left = entry.msgid
                 if linenum:
                     pnum = str(entry.linenum) + ":"
-                    if len(path[0]) > 1:
-                        pfile = file.name + ":"
+                    if len(path) > 1:
+                        pfile = filename + ":"
                     else:
                         pfile = ""
                     left = pfile + pnum + left
@@ -89,6 +92,25 @@ def find_in_po(pattern, path, linenum, file_match, no_messages):
                 )
     if not file_match:
         print(colorize(tabulate(table, tablefmt="fancy_grid"), pattern, prefixes))
+
+
+def process_path(path, recursive, exclude_dir):
+    files = []
+    for elt in path:
+        if os.path.isfile(elt):
+            files.append(elt)
+        elif os.path.isdir(elt):
+            if recursive:
+                files.extend(glob.glob(elt + os.sep + "**/*.po", recursive=True))
+            else:
+                print("{}: {}: Is a directory".format(sys.argv[0], elt), file=sys.stderr)
+                sys.exit(1)
+        else:
+            print("{}: {}: No such file or directory".format(sys.argv[0], elt), file=sys.stderr)
+            sys.exit(1)
+    if exclude_dir:
+        files = [elt for elt in files if exclude_dir.rstrip(os.sep) + os.sep not in elt]
+    return files
 
 
 def parse_args():
@@ -106,8 +128,16 @@ def parse_args():
                              "would normally have been printed.  The scanning will stop on the first match.")
     parser.add_argument("-s", "--no-messages", action="store_true",
                         help="Suppress error messages about nonexistent or unreadable files.")
+    parser.add_argument("-r", "--recursive", action="store_true",
+                        help="Read  all  files under each directory, recursively, following symbolic links only "
+                             "if they are on the command line.  Note that if no file operand is given, pogrep searches"
+                             "the working directory.")
+    parser.add_argument("--exclude-dir",
+                        help="Skip any command-line directory with a name suffix that matches the pattern.  "
+                             "When searching recursively, skip any subdirectory whose base name matches GLOB.  "
+                             "Ignore any redundant trailing slashes in GLOB.")
     parser.add_argument("pattern")
-    parser.add_argument("path", action="append", type=argparse.FileType('r'), nargs='+')
+    parser.add_argument("path", nargs='*')
     return parser.parse_args()
 
 
@@ -119,7 +149,8 @@ def main():
         args.pattern = r"\b" + args.pattern + r"\b"
     if args.ignore_case:
         args.pattern = r"(?i)" + args.pattern
-    find_in_po(args.pattern, args.path, args.line_number, args.files_with_matches, args.no_messages)
+    files = process_path(args.path, args.recursive, args.exclude_dir)
+    find_in_po(args.pattern, files, args.line_number, args.files_with_matches, args.no_messages)
 
 
 if __name__ == "__main__":
