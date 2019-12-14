@@ -137,7 +137,7 @@ def parse_args():
     parser.add_argument("-s", "--no-messages", action="store_true",
                         help="Suppress error messages about nonexistent or unreadable files.")
     parser.add_argument("-r", "--recursive", action="store_true",
-                        help="Read  all  files under each directory, recursively, following symbolic links only "
+                        help="Read all files under each directory, recursively, following symbolic links only "
                              "if they are on the command line.  Note that if no file operand is given, pogrep searches "
                              "the working directory.")
     parser.add_argument("--exclude-dir",
