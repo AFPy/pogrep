@@ -124,7 +124,7 @@ def process_path(path, recursive, exclude_dir):
 def parse_args():
     parser = argparse.ArgumentParser(description="Find translated words.")
     parser.add_argument("-F", "--fixed-strings", action="store_true",
-                        help="Interpret pattern as fixed string, not regular expressions")
+                        help="Interpret pattern as fixed string, not regular expressions.")
     parser.add_argument("-i", "--ignore-case", action="store_true",
                         help="Ignore case distinctions, so that characters that differ only in case match each other.")
     parser.add_argument("-w", "--word-regexp", action="store_true",
@@ -138,7 +138,7 @@ def parse_args():
                         help="Suppress error messages about nonexistent or unreadable files.")
     parser.add_argument("-r", "--recursive", action="store_true",
                         help="Read  all  files under each directory, recursively, following symbolic links only "
-                             "if they are on the command line.  Note that if no file operand is given, pogrep searches"
+                             "if they are on the command line.  Note that if no file operand is given, pogrep searches "
                              "the working directory.")
     parser.add_argument("--exclude-dir",
                         help="Skip any command-line directory with a name suffix that matches the pattern.  "
