@@ -96,6 +96,15 @@ def find_in_po(pattern, path, linenum, file_match, no_messages):
 
 def process_path(path, recursive, exclude_dir):
     files = []
+    if len(path) == 0:
+        if recursive:
+            files = glob.glob("**/*.po", recursive=True)
+            if exclude_dir :
+                return [elt for elt in files if exclude_dir.rstrip(os.sep) + os.sep not in elt]
+            else:
+                return files
+        else:
+            sys.exit(0)
     for elt in path:
         if os.path.isfile(elt):
             files.append(elt)
