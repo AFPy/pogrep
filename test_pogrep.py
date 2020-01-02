@@ -69,14 +69,14 @@ class TestColorize(TestCase):
                          ['42:', '']]
 
     def test_pattern(self):
-        self.assertIn(RED + "fugiat" + NO_COLOR, colorize(self.text, "fugiat", []))
-        self.assertNotIn(RED, colorize(self.text, "hello", []))
+        self.assertIn(RED + "fugiat" + NO_COLOR, colorize(text=self.text, pattern="fugiat", prefixes=[]))
+        self.assertNotIn(RED, colorize(text=self.text, pattern="hello", prefixes=[]))
 
     def test_prefixes(self):
         self.text = " 42:" + self.text
-        self.assertIn(GREEN + "42:" + NO_COLOR, colorize(self.text, "fugiat", self.prefixes))
+        self.assertIn(GREEN + "42:" + NO_COLOR, colorize(text=self.text, pattern="fugiat", prefixes=self.prefixes))
         self.text = " consectetur:" + self.text[1:]
-        result = colorize(self.text, "consectetur", self.prefixes)
+        result = colorize(text=self.text, pattern="consectetur", prefixes=self.prefixes)
         self.assertIn(MAGENTA + "consectetur:" + GREEN + "42:" + NO_COLOR, result)
         self.assertIn(RED + "consectetur" + NO_COLOR, result)
 
@@ -93,22 +93,26 @@ class TestProcessPath(fake_filesystem_unittest.TestCase):
 
     def test_directory_and_no_recursion(self):
         with self.assertRaises(SystemExit) as cm:
-            process_path('.', False, None)
+            process_path('.', recursive=False, exclude_dir=None)
         self.assertEqual(cm.exception.code, 1)
 
     def test_no_file(self):
         with self.assertRaises(SystemExit) as cm:
-            process_path('non_exists_file.po', False, None)
+            process_path('non_exists_file.po', recursive=False, exclude_dir=None)
         self.assertEqual(cm.exception.code, 1)
 
     def test_list_of_files(self):
-        self.assertSequenceEqual(['file1.txt', 'file2.txt'], process_path(['file1.txt', 'file2.txt'], False, None))
+        self.assertSequenceEqual(['file1.txt', 'file2.txt'],
+                                 process_path(['file1.txt', 'file2.txt'], recursive=False, exclude_dir=None))
 
     def test_empty_and_recursive(self):
         self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po', 'venv/file1.po'],
-                                 process_path([], True, None))
+                                 process_path([], recursive=True, exclude_dir=None))
 
     def test_exclude_dir(self):
-        self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po'], process_path([], True, 'venv'))
-        self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po'], process_path([], True, 'venv/'))
-        self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po'], process_path([], True, 'venv//'))
+        self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po'],
+                                 process_path([], recursive=True, exclude_dir='venv'))
+        self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po'],
+                                 process_path([], recursive=True, exclude_dir='venv/'))
+        self.assertSequenceEqual(['first.po', 'second.po', 'library/lib1.po'],
+                                 process_path([], recursive=True, exclude_dir='venv//'))
