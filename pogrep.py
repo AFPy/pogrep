@@ -59,7 +59,7 @@ def colorize(text, pattern, prefixes):
     return result
 
 
-def find_in_po(pattern, path, linenum, file_match, no_messages, right, no_left):
+def find_in_po(pattern, path, linenum, file_match, no_messages, right=False, no_left=False):
     table = []
     prefixes = []
     for filename in path:
