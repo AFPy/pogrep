@@ -44,9 +44,6 @@ def get_term_width():
     return width
 
 
-WIDTH = get_term_width()
-
-
 def colorize(text, pattern, prefixes):
     result = regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, text)
     for pnum, pfile in prefixes:
@@ -62,6 +59,7 @@ def colorize(text, pattern, prefixes):
 def find_in_po(pattern, path, linenum, file_match, no_messages):
     table = []
     prefixes = []
+    term_width = get_term_width()
     for filename in path:
         try:
             pofile = polib.pofile(filename)
@@ -85,8 +83,8 @@ def find_in_po(pattern, path, linenum, file_match, no_messages):
                     prefixes.append((pnum, pfile))
                 table.append(
                     [
-                        fill(left, width=(WIDTH - 7) // 2),
-                        fill(entry.msgstr, width=(WIDTH - 7) // 2),
+                        fill(left, width=(term_width - 7) // 2),
+                        fill(entry.msgstr, width=(term_width - 7) // 2),
                     ]
                 )
     if not file_match:
