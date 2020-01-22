@@ -36,7 +36,7 @@ class TestLateral(fake_filesystem_unittest.TestCase):
         with open('about.po', 'w') as f:
             f.write(POText)
 
-    def testNotInLeft(self):
+    def testNotInSource(self):
         tmp_stdout = StringIO()
         pattern = 'propos'
         with contextlib.redirect_stdout(tmp_stdout):
@@ -45,21 +45,21 @@ class TestLateral(fake_filesystem_unittest.TestCase):
         output = tmp_stdout.getvalue()
         self.assertTrue(len(output) == 0, "Original text should not contain " + pattern)
 
-    def testRight(self):
+    def testInTranslation(self):
         tmp_stdout = StringIO()
         pattern = 'propos'
         with contextlib.redirect_stdout(tmp_stdout):
             find_in_po(pattern, ('about.po',),
-                       linenum=False, file_match=True, no_messages=False, right=True, no_left=True)
+                       linenum=False, file_match=True, no_messages=False, in_translation=True, not_in_source=True)
         output = tmp_stdout.getvalue()
         self.assertIn("about.po", output, "Translated text should contain " + pattern)
 
-    def testNotInRight(self):
+    def testNotInTranslation(self):
         tmp_stdout = StringIO()
         pattern = 'About'
         with contextlib.redirect_stdout(tmp_stdout):
             find_in_po(pattern, ('about.po',),
-                       linenum=False, file_match=True, no_messages=False, right=True, no_left=True)
+                       linenum=False, file_match=True, no_messages=False, in_translation=True, not_in_source=True)
         output = tmp_stdout.getvalue()
         self.assertTrue(len(output) == 0, "Translated text should not contain " + pattern)
 
