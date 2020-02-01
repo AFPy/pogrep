@@ -47,7 +47,7 @@ def colorize(text, pattern, prefixes):
     return result
 
 
-def find_in_po(pattern, path, linenum, file_match, no_messages):
+def find_in_po(pattern, path, linenum, file_match, no_messages, in_translation=False, not_in_source=False):
     table = []
     prefixes = []
     term_width = get_terminal_size()[0]
@@ -59,7 +59,8 @@ def find_in_po(pattern, path, linenum, file_match, no_messages):
                 print("{} doesn't seem to be a .po file".format(filename), file=sys.stderr)
             continue
         for entry in pofile:
-            if entry.msgstr and regex.search(pattern, entry.msgid):
+            if entry.msgstr and ((not not_in_source and regex.search(pattern, entry.msgid))
+                                 or (in_translation and regex.search(pattern, entry.msgstr))):
                 if file_match:
                     print(MAGENTA + filename + NO_COLOR)
                     break
@@ -129,6 +130,10 @@ def parse_args():
                         help="Read all files under each directory, recursively, following symbolic links only "
                              "if they are on the command line.  Note that if no file operand is given, pogrep searches "
                              "the working directory.")
+    parser.add_argument("--translation", action="store_true",
+                        help="search pattern in translated text (result printed on the right column")
+    parser.add_argument("--no-source", action="store_true",
+                        help="do NOT search pattern in original text (result printed on the left column")
     parser.add_argument("--exclude-dir",
                         help="Skip any command-line directory with a name suffix that matches the pattern.  "
                              "When searching recursively, skip any subdirectory whose base name matches GLOB.  "
@@ -147,7 +152,8 @@ def main():
     if args.ignore_case:
         args.pattern = r"(?i)" + args.pattern
     files = process_path(args.path, args.recursive, args.exclude_dir)
-    find_in_po(args.pattern, files, args.line_number, args.files_with_matches, args.no_messages)
+    find_in_po(args.pattern, files, args.line_number, args.files_with_matches, args.no_messages,
+               args.translation, args.no_source)
 
 
 if __name__ == "__main__":
