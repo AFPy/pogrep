@@ -1,1 +1,1 @@
-pyfakefs==3.7.1
+pyfakefs==4.0.1
