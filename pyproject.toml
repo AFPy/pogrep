@@ -1,18 +1,3 @@
 [build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
-
-[tool.flit.metadata]
-module = "pogrep"
-author = "Julien Palard"
-author-email = "julien@palard.fr"
-requires = [
-  "regex",
-  "polib",
-  "tabulate",
-]
-home-page = "https://github.com/JulienPalard/pogrep"
-classifiers = ["License :: OSI Approved :: MIT License"]
-
-[tool.flit.scripts]
-pogrep = "pogrep:main"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

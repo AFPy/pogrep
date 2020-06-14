@@ -1,0 +1,11 @@
+black
+flake8
+isort
+mypy
+pip-tools
+polib
+pylint
+pytest
+regex
+tabulate
+tox
