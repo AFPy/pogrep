@@ -26,7 +26,7 @@ polib==1.1.0              # via -r requirements-dev.in
 py==1.8.1                 # via pytest, tox
 pycodestyle==2.6.0        # via flake8
 pyflakes==2.2.0           # via flake8
-pylint==2.5.3             # via -r requirements-dev.in
+pylint==2.6.0             # via -r requirements-dev.in
 pyparsing==2.4.7          # via packaging
 pytest==5.4.3             # via -r requirements-dev.in
 regex==2020.6.8           # via -r requirements-dev.in, black
