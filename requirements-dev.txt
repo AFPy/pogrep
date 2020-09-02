@@ -33,7 +33,7 @@ regex==2020.6.8           # via -r requirements-dev.in, black
 six==1.15.0               # via astroid, packaging, pip-tools, tox, virtualenv
 tabulate==0.8.7           # via -r requirements-dev.in
 toml==0.10.1              # via black, pylint, tox
-tox==3.15.2               # via -r requirements-dev.in
+tox==3.20.0               # via -r requirements-dev.in
 typed-ast==1.4.1          # via black, mypy
 typing-extensions==3.7.4.2  # via mypy
 virtualenv==20.0.23       # via tox
