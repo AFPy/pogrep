@@ -3,6 +3,10 @@
 Searches for string in po files. *popgrep* supports various *GNU grep* options
 to ease its use.
 
+### Pogrep is part of poutils!
+
+[Poutils](https://pypi.org/project/poutils) (`.po` utils) is is a metapackage to easily install usefull Python tools to use with po files
+and `pogrep` is a part of it! Go check out [Poutils](https://pypi.org/project/poutils) to discover the other useful tools for `po` file related translation!
 
 # Examples
 
