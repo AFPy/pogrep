@@ -18,8 +18,7 @@ from tabulate import tabulate
 
 
 def get_colors():
-    """Just returns the CSI codes for red, green, magenta, and reset color.
-    """
+    """Just returns the CSI codes for red, green, magenta, and reset color."""
     try:
         curses.setupterm()
         fg_color = curses.tigetstr("setaf") or curses.tigetstr("setf") or ""
@@ -60,8 +59,7 @@ def colorize(text, pattern, prefixes=()):
 
 
 class Match(NamedTuple):
-    """Represents a string found in a po file.
-    """
+    """Represents a string found in a po file."""
 
     file: str
     line: int
@@ -75,8 +73,7 @@ def find_in_po(
     not_in_source: bool = False,
     in_translation: bool = False,
 ) -> Tuple[List[str], List[Match]]:
-    """Find the given pattern in the given list of paths or files.
-    """
+    """Find the given pattern in the given list of paths or files."""
     results = []
     errors = []
     for filename in path:
@@ -97,10 +94,12 @@ def find_in_po(
 
 
 def display_results(
-    matches: Sequence[Match], pattern: str, line_number: bool, files_with_matches: bool,
+    matches: Sequence[Match],
+    pattern: str,
+    line_number: bool,
+    files_with_matches: bool,
 ):
-    """Display matches as a colorfull table.
-    """
+    """Display matches as a colorfull table."""
     files = {match.file for match in matches}
     if files_with_matches:  # Just print filenames
         for file in files:
@@ -160,8 +159,7 @@ def process_path(path: Sequence[str], recursive: bool) -> List[str]:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments.
-    """
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Find translated words.")
     parser.add_argument(
         "-F",
@@ -237,8 +235,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    """Command line entry point.
-    """
+    """Command line entry point."""
     args = parse_args()
     if args.fixed_strings:
         args.pattern = regex.escape(args.pattern)
@@ -254,7 +251,10 @@ def main():
         for error in errors:
             print(error, file=sys.stderr)
     display_results(
-        results, args.pattern, args.line_number, args.files_with_matches,
+        results,
+        args.pattern,
+        args.line_number,
+        args.files_with_matches,
     )
 
 

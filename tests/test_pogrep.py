@@ -49,7 +49,10 @@ def test_not_in_source(about_po):
 
 def test_in_translation(about_po):
     errors, results = find_in_po(
-        "propos", ("about.po",), in_translation=True, not_in_source=True,
+        "propos",
+        ("about.po",),
+        in_translation=True,
+        not_in_source=True,
     )
     assert not errors
     assert "about.po" in {result.file for result in results}
@@ -57,7 +60,10 @@ def test_in_translation(about_po):
 
 def test_not_in_translation(about_po):
     errors, results = find_in_po(
-        "About", ("about.po",), in_translation=True, not_in_source=True,
+        "About",
+        ("about.po",),
+        in_translation=True,
+        not_in_source=True,
     )
     assert not errors
     assert not results
