@@ -4,7 +4,6 @@
 __version__ = "0.1.2"
 
 import argparse
-import curses
 import glob
 import os
 import sys
@@ -17,22 +16,39 @@ import polib
 from tabulate import tabulate
 
 
-def get_colors():
-    """Just returns the CSI codes for red, green, magenta, and reset color."""
-    try:
-        curses.setupterm()
-        fg_color = curses.tigetstr("setaf") or curses.tigetstr("setf") or ""
-        red = str(curses.tparm(fg_color, 1), "ascii")
-        green = str(curses.tparm(fg_color, 2), "ascii")
-        magenta = str(curses.tparm(fg_color, 5), "ascii")
-        no_color = str(curses.tigetstr("sgr0"), "ascii")
-    except curses.error:
-        red, green, magenta = "", "", ""
-        no_color = ""
-    return red, green, magenta, no_color
+NO_COLOR = "\33[m\33[K"
 
 
-RED, GREEN, MAGENTA, NO_COLOR = get_colors()
+GREP_COLORS = {  # Default values from grep source code
+    "mt": None,  # both ms/mc
+    "ms": "01;31",  # selected matched text - default: bold red
+    "mc": "01;31",  # context matched text - default: bold red
+    "fn": "35",  # filename - default: magenta
+    "ln": "32",  # line number - default: green
+    "bn": "32",  # byte(sic) offset - default: green
+    "se": "36",  # separator - default: cyan
+    "sl": "",  # selected lines - default: color pair
+    "cx": "",  # context lines - default: color pair
+    "rv": None,  # -v reverses sl / cx
+    "ne": None,  # no EL on SGR
+}
+
+
+def start_color(c: str):
+    return "\33[" + GREP_COLORS[c] + "m\33[K"
+
+
+def parse_grep_colors(grep_envvar: str):
+    """Parse colors and other attributes from environment variable"""
+    global GREP_COLORS
+    last_value = ""
+    for cle in reversed(grep_envvar.split(":")):
+        k, v = cle.split("=")
+        if v:
+            GREP_COLORS[k] = v
+            last_value = v
+        else:
+            GREP_COLORS[k] = last_value
 
 
 def colorize(text, pattern, prefixes=()):
@@ -45,15 +61,17 @@ def colorize(text, pattern, prefixes=()):
      file.py:30:foo bar baz, with the following colors:
      |   M  ||G|    |R|
     """
-    result = regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, text)
+    result = regex.sub(pattern, start_color("ms") + r"\g<0>" + NO_COLOR, text)
     for pnum, pfile in prefixes:
         prefix = " " + pfile + pnum
         prefix_colored = regex.escape(
-            regex.sub(pattern, RED + r"\g<0>" + NO_COLOR, prefix)
+            regex.sub(pattern, start_color("ms") + r"\g<0>" + NO_COLOR, prefix)
         )
-        if regex.escape(RED) in prefix_colored:
+        if regex.escape(start_color("ms")) in prefix_colored:
             prefix = prefix_colored
-        prefix_replace = " " + MAGENTA + pfile + GREEN + pnum + NO_COLOR
+        prefix_replace = (
+            " " + start_color("fn") + pfile + start_color("ln") + pnum + NO_COLOR
+        )
         result = regex.sub(prefix, prefix_replace, result, count=1)
     return result
 
@@ -98,12 +116,16 @@ def display_results(
     pattern: str,
     line_number: bool,
     files_with_matches: bool,
+    colors: bool,
 ):
     """Display matches as a colorfull table."""
     files = {match.file for match in matches}
     if files_with_matches:  # Just print filenames
         for file in files:
-            print(MAGENTA + file + NO_COLOR)
+            if colors:
+                print(start_color["fn"] + file + NO_COLOR)
+            else:
+                print(file)
         return
     prefixes = []
     table = []
@@ -124,7 +146,10 @@ def display_results(
                 fill(match.msgstr, width=(term_width - 7) // 2),
             ]
         )
-    print(colorize(tabulate(table, tablefmt="fancy_grid"), pattern, prefixes))
+    if colors:
+        print(colorize(tabulate(table, tablefmt="fancy_grid"), pattern, prefixes))
+    else:
+        print(tabulate(table, tablefmt="fancy_grid"))
 
 
 def process_path(path: Sequence[str], recursive: bool) -> List[str]:
@@ -229,6 +254,17 @@ def parse_args() -> argparse.Namespace:
         "matches GLOB.  "
         "Ignore any redundant trailing slashes in GLOB.",
     )
+    parser.add_argument(
+        "--color",
+        "--colour",
+        choices=["never", "always", "auto"],
+        default="auto",
+        help="Surround the matched (non-empty) strings, matching lines, context lines, file names, line numbers, "
+        "byte offsets, and separators (for fields and groups of context lines) with escape sequences to display "
+        "them in color on the terminal.  The colors are defined by the environment variable GREP_COLORS.  "
+        "The deprecated environment variable GREP_COLOR is still supported, but its setting does not have "
+        "priority.",
+    )
     parser.add_argument("pattern")
     parser.add_argument("path", nargs="*")
     return parser.parse_args()
@@ -236,7 +272,24 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     """Command line entry point."""
+    global GREP_COLORS
     args = parse_args()
+    if args.color == "auto":
+        args.color = sys.stdout.isatty()
+    else:
+        args.color = args.color != "never"
+    if args.color:
+        try:
+            grep_color = os.environ["GREP_COLOR"]
+            for k in ("mt", "ms", "mc"):
+                GREP_COLORS[k] = grep_color
+        except KeyError:
+            pass
+        try:
+            grep_colors = os.environ["GREP_COLORS"]
+            parse_grep_colors(grep_colors)
+        except KeyError:
+            pass
     if args.fixed_strings:
         args.pattern = regex.escape(args.pattern)
     if args.word_regexp:
@@ -255,6 +308,7 @@ def main():
         args.pattern,
         args.line_number,
         args.files_with_matches,
+        args.color,
     )
 
 
