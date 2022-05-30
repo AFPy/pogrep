@@ -1,6 +1,6 @@
 import pytest
 from test.support import change_cwd
-from pogrep import RED, GREEN, MAGENTA, colorize, NO_COLOR, process_path, find_in_po
+from pogrep import start_color, colorize, NO_COLOR, process_path, find_in_po
 
 POText = """
 msgid ""
@@ -79,24 +79,22 @@ culpa qui officia deserunt mollit anim id est laborum."""
 TEST_PREFIXES = [["25:", "glossary.po:"], ["42:", "consectetur:"], ["42:", ""]]
 
 
-@pytest.mark.skipif(RED == "", reason="No curses support in this test env.")
 def test_pattern():
-    assert RED + "fugiat" + NO_COLOR in colorize(
+    assert start_color("ms") + "fugiat" + NO_COLOR in colorize(
         text=TEST_TEXT, pattern="fugiat", prefixes=[]
     )
-    assert RED not in colorize(text=TEST_TEXT, pattern="hello", prefixes=[])
+    assert start_color("ms") not in colorize(text=TEST_TEXT, pattern="hello", prefixes=[])
 
 
-@pytest.mark.skipif(RED == "", reason="No curses support in this test env.")
 def test_prefixes():
     text = " 42:" + TEST_TEXT
-    assert GREEN + "42:" + NO_COLOR in colorize(
+    assert start_color("ln") + "42:" + NO_COLOR in colorize(
         text=text, pattern="fugiat", prefixes=TEST_PREFIXES
     )
     text = " consectetur:" + text[1:]
     result = colorize(text=text, pattern="consectetur", prefixes=TEST_PREFIXES)
-    assert MAGENTA + "consectetur:" + GREEN + "42:" + NO_COLOR in result
-    assert RED + "consectetur" + NO_COLOR in result
+    assert start_color("fn") + "consectetur:" + start_color("fn") + "42:" + NO_COLOR in result
+    assert start_color("ms") + "consectetur" + NO_COLOR in result
 
 
 @pytest.fixture
