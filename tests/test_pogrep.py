@@ -83,7 +83,9 @@ def test_pattern():
     assert start_color("ms") + "fugiat" + NO_COLOR in colorize(
         text=TEST_TEXT, pattern="fugiat", prefixes=[]
     )
-    assert start_color("ms") not in colorize(text=TEST_TEXT, pattern="hello", prefixes=[])
+    assert start_color("ms") not in colorize(
+        text=TEST_TEXT, pattern="hello", prefixes=[]
+    )
 
 
 def test_prefixes():
@@ -93,7 +95,10 @@ def test_prefixes():
     )
     text = " consectetur:" + text[1:]
     result = colorize(text=text, pattern="consectetur", prefixes=TEST_PREFIXES)
-    assert start_color("fn") + "consectetur:" + start_color("ln") + "42:" + NO_COLOR in result
+    assert (
+        start_color("fn") + "consectetur:" + start_color("ln") + "42:" + NO_COLOR
+        in result
+    )
     assert start_color("ms") + "consectetur" + NO_COLOR in result
 
 

@@ -34,21 +34,22 @@ GREP_COLORS = {  # Default values from grep source code
 }
 
 
-def start_color(c: str):
-    return "\33[" + GREP_COLORS[c] + "m\33[K"
+def start_color(sgr_chain: str):
+    """Select graphic rendition to highlight the output  """
+    return "\33[" + GREP_COLORS[sgr_chain] + "m\33[K"
 
 
 def parse_grep_colors(grep_envvar: str):
     """Parse colors and other attributes from environment variable"""
     global GREP_COLORS
     last_value = ""
-    for cle in reversed(grep_envvar.split(":")):
-        k, v = cle.split("=")
-        if v:
-            GREP_COLORS[k] = v
-            last_value = v
+    for entry in reversed(grep_envvar.split(":")):
+        key, value = entry.split("=")
+        if value:
+            GREP_COLORS[key] = value
+            last_value = value
         else:
-            GREP_COLORS[k] = last_value
+            GREP_COLORS[key] = last_value
 
 
 def colorize(text, pattern, prefixes=()):
@@ -123,7 +124,7 @@ def display_results(
     if files_with_matches:  # Just print filenames
         for file in files:
             if colors:
-                print(start_color["fn"] + file + NO_COLOR)
+                print(start_color("fn") + file + NO_COLOR)
             else:
                 print(file)
         return
@@ -259,11 +260,12 @@ def parse_args() -> argparse.Namespace:
         "--colour",
         choices=["never", "always", "auto"],
         default="auto",
-        help="Surround the matched (non-empty) strings, matching lines, context lines, file names, line numbers, "
-        "byte offsets, and separators (for fields and groups of context lines) with escape sequences to display "
-        "them in color on the terminal.  The colors are defined by the environment variable GREP_COLORS.  "
-        "The deprecated environment variable GREP_COLOR is still supported, but its setting does not have "
-        "priority.",
+        help="Surround the matched (non-empty) strings, matching lines, "
+        "context lines, file names, line numbers, byte offsets, and separators "
+        "(for fields and groups of context lines) with escape sequences to "
+        "display them in color on the terminal.  The colors are defined by the "
+        "environment variable GREP_COLORS. The deprecated environment variable "
+        "GREP_COLOR is still supported, but its setting does not have priority.",
     )
     parser.add_argument("pattern")
     parser.add_argument("path", nargs="*")
