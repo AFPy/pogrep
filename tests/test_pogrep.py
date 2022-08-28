@@ -4,7 +4,7 @@ try:
     from test.support.os_helper import change_cwd
 except ImportError:
     from test.support import change_cwd
-from pogrep import start_color, colorize, NO_COLOR, process_path, find_in_po
+from pogrep import GrepColors, colorize, process_path, find_in_po
 
 POText = """
 msgid ""
@@ -84,26 +84,35 @@ TEST_PREFIXES = [["25:", "glossary.po:"], ["42:", "consectetur:"], ["42:", ""]]
 
 
 def test_pattern():
-    assert start_color("ms") + "fugiat" + NO_COLOR in colorize(
-        text=TEST_TEXT, pattern="fugiat", prefixes=[]
+    grep_colors = GrepColors()
+    grep_colors.get_from_env_variables("ms=99")
+    assert "\33[99m\33[K" + "fugiat" + grep_colors.NO_COLOR in colorize(
+        text=TEST_TEXT, pattern="fugiat", grep_colors=grep_colors, prefixes=[]
     )
-    assert start_color("ms") not in colorize(
-        text=TEST_TEXT, pattern="hello", prefixes=[]
+    assert "\33[99m\33[K" not in colorize(
+        text=TEST_TEXT, pattern="hello", grep_colors=grep_colors, prefixes=[]
     )
 
 
 def test_prefixes():
     text = " 42:" + TEST_TEXT
-    assert start_color("ln") + "42:" + NO_COLOR in colorize(
-        text=text, pattern="fugiat", prefixes=TEST_PREFIXES
+    grep_colors = GrepColors()
+    grep_colors.get_from_env_variables("ln=99:fn=88:ms=77")
+    assert "\33[99m\33[K" + "42:" + grep_colors.NO_COLOR in colorize(
+        text=text, pattern="fugiat", grep_colors=grep_colors, prefixes=TEST_PREFIXES
     )
     text = " consectetur:" + text[1:]
-    result = colorize(text=text, pattern="consectetur", prefixes=TEST_PREFIXES)
+    result = colorize(
+        text=text,
+        pattern="consectetur",
+        grep_colors=grep_colors,
+        prefixes=TEST_PREFIXES,
+    )
     assert (
-        start_color("fn") + "consectetur:" + start_color("ln") + "42:" + NO_COLOR
+        "\33[88m\33[K" + "consectetur:" + "\33[99m\33[K" + "42:" + grep_colors.NO_COLOR
         in result
     )
-    assert start_color("ms") + "consectetur" + NO_COLOR in result
+    assert "\33[77m\33[K" + "consectetur" + grep_colors.NO_COLOR in result
 
 
 @pytest.fixture
@@ -148,3 +157,11 @@ def test_empty_and_recursive(few_files):
         "library/lib1.po",
         "venv/file1.po",
     }
+
+
+def test_read_grep_colors_envvar():
+    grep_colors = GrepColors()
+    grep_colors.get_from_env_variables("ms=:ln=99:fn=88")
+    assert grep_colors.start("fn") == "\33[88m\33[K"
+    assert grep_colors.start("ln") == "\33[99m\33[K"
+    assert grep_colors.start("ms") == "\33[99m\33[K"
