@@ -4,7 +4,7 @@
 #
 #    pip-compile setup.py
 #
-polib==1.1.0
+polib==1.1.1
     # via pogrep (setup.py)
 regex==2020.11.13
     # via pogrep (setup.py)

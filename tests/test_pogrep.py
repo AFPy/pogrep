@@ -1,5 +1,9 @@
 import pytest
-from test.support import change_cwd
+
+try:
+    from test.support.os_helper import change_cwd
+except ImportError:
+    from test.support import change_cwd
 from pogrep import start_color, colorize, NO_COLOR, process_path, find_in_po
 
 POText = """

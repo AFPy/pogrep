@@ -8,7 +8,7 @@ import glob
 import os
 import sys
 from textwrap import fill
-from typing import Sequence, NamedTuple, List, Tuple
+from typing import Sequence, NamedTuple, List, Tuple, Optional
 from shutil import get_terminal_size
 
 import regex
@@ -20,7 +20,7 @@ NO_COLOR = "\33[m\33[K"
 
 
 GREP_COLORS = {  # Default values from grep source code
-    "mt": None,  # both ms/mc
+    "mt": "01;31",  # both ms/mc
     "ms": "01;31",  # selected matched text - default: bold red
     "mc": "01;31",  # context matched text - default: bold red
     "fn": "35",  # filename - default: magenta
@@ -29,27 +29,26 @@ GREP_COLORS = {  # Default values from grep source code
     "se": "36",  # separator - default: cyan
     "sl": "",  # selected lines - default: color pair
     "cx": "",  # context lines - default: color pair
-    "rv": None,  # -v reverses sl / cx
-    "ne": None,  # no EL on SGR
+    # "rv": None,  # -v reverses sl / cx
+    # "ne": None,  # no EL on SGR
 }
 
 
 def start_color(sgr_chain: str):
-    """Select graphic rendition to highlight the output  """
+    """Select graphic rendition to highlight the output"""
     return "\33[" + GREP_COLORS[sgr_chain] + "m\33[K"
 
 
-def parse_grep_colors(grep_envvar: str):
+def parse_grep_colors(grep_envvar: str, grep_colors: dict):
     """Parse colors and other attributes from environment variable"""
-    global GREP_COLORS
     last_value = ""
     for entry in reversed(grep_envvar.split(":")):
         key, value = entry.split("=")
         if value:
-            GREP_COLORS[key] = value
+            grep_colors[key] = value
             last_value = value
         else:
-            GREP_COLORS[key] = last_value
+            grep_colors[key] = last_value
 
 
 def colorize(text, pattern, prefixes=()):
@@ -81,7 +80,7 @@ class Match(NamedTuple):
     """Represents a string found in a po file."""
 
     file: str
-    line: int
+    line: Optional[int]  # types-polib states that linenum may be None
     msgid: str
     msgstr: str
 
@@ -99,7 +98,7 @@ def find_in_po(
         try:
             pofile = polib.pofile(filename)
         except OSError:
-            errors.append("{} doesn't seem to be a .po file".format(filename))
+            errors.append(f"{filename} doesn't seem to be a .po file")
             continue
         for entry in pofile:
             if entry.msgstr and (
@@ -171,13 +170,11 @@ def process_path(path: Sequence[str], recursive: bool) -> List[str]:
             if recursive:
                 files.extend(glob.glob(elt + os.sep + "**/*.po", recursive=True))
             else:
-                print(
-                    "{}: {}: Is a directory".format(sys.argv[0], elt), file=sys.stderr
-                )
+                print(f"{sys.argv[0]}: {elt}: Is a directory", file=sys.stderr)
                 sys.exit(1)
         else:
             print(
-                "{}: {}: No such file or directory".format(sys.argv[0], elt),
+                f"{sys.argv[0]}: {elt}: No such file or directory",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -274,22 +271,21 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     """Command line entry point."""
-    global GREP_COLORS
     args = parse_args()
     if args.color == "auto":
         args.color = sys.stdout.isatty()
     else:
         args.color = args.color != "never"
     if args.color:
+        grep_colors = GREP_COLORS
         try:
-            grep_color = os.environ["GREP_COLOR"]
+            gc_from_env = os.environ["GREP_COLOR"]
             for k in ("mt", "ms", "mc"):
-                GREP_COLORS[k] = grep_color
+                grep_colors[k] = gc_from_env
         except KeyError:
             pass
         try:
-            grep_colors = os.environ["GREP_COLORS"]
-            parse_grep_colors(grep_colors)
+            parse_grep_colors(os.environ["GREP_COLORS"], grep_colors)
         except KeyError:
             pass
     if args.fixed_strings:
