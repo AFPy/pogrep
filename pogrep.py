@@ -249,7 +249,7 @@ def main():
         files = [
             f
             for f in files
-            if not any([excl.rstrip(os.sep) + os.sep in f for excl in args.exclude_dir])
+            if not any(excl.rstrip(os.sep) + os.sep in f for excl in args.exclude_dir)
         ]
     errors, results = find_in_po(args.pattern, files, args.no_source, args.translation)
     if not args.no_messages:
