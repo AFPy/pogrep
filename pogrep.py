@@ -223,6 +223,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--exclude-dir",
+        action="append",
         help="Skip any command-line directory with a name suffix that matches "
         "the pattern.  "
         "When searching recursively, skip any subdirectory whose base name "
@@ -245,7 +246,11 @@ def main():
         args.pattern = r"(?i)" + args.pattern
     files = process_path(args.path, args.recursive)
     if args.exclude_dir:
-        files = [f for f in files if args.exclude_dir.rstrip(os.sep) + os.sep not in f]
+        files = [
+            f
+            for f in files
+            if not any([excl.rstrip(os.sep) + os.sep in f for excl in args.exclude_dir])
+        ]
     errors, results = find_in_po(args.pattern, files, args.no_source, args.translation)
     if not args.no_messages:
         for error in errors:
