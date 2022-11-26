@@ -327,7 +327,7 @@ def run_git(
     if grep_colors is not None then the pattern is highlighted
     """
     cmd_line = ["git", "blame"]
-    cmd_line.extend(f"-L {l},/^$/" for l in lines_list)
+    cmd_line.extend(f"-L {line},/^$/" for line in lines_list)
     cmd_line.append(filename)
     try:
         result = run(cmd_line, capture_output=True, text=True, check=True)
