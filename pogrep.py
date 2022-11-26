@@ -10,6 +10,7 @@ import sys
 from textwrap import fill
 from typing import Sequence, NamedTuple, List, Tuple, Optional
 from shutil import get_terminal_size
+from subprocess import run, CalledProcessError
 
 import regex
 import polib
@@ -291,18 +292,57 @@ def parse_args() -> argparse.Namespace:
         "environment variable GREP_COLORS. The deprecated environment variable "
         "GREP_COLOR is still supported, but its setting does not have priority.",
     )
+    parser.add_argument(
+        "--blame",
+        action="store_true",
+        help="Annotate each line from git information for the entries of each "
+        "match line. Implies --no-source and --translation.",
+    )
     parser.add_argument("pattern")
     parser.add_argument("path", nargs="*")
-    return parser.parse_args()
+
+    args = parser.parse_args()
+    if args.color == "auto":
+        args.color = sys.stdout.isatty()
+    else:
+        args.color = args.color != "never"
+    if args.fixed_strings:
+        args.pattern = regex.escape(args.pattern)
+    if args.word_regexp:
+        args.pattern = r"\b" + args.pattern + r"\b"
+    if args.ignore_case:
+        args.pattern = r"(?i)" + args.pattern
+    if args.blame:
+        args.no_source = True
+        args.translation = True
+
+    return args
+
+
+def run_git(
+    lines_list: Sequence[int], filename: str, pattern: str, grep_colors: GrepColors
+):
+    """run git blame for the specified lines in filename
+
+    if grep_colors is not None then the pattern is highlighted
+    """
+    cmd_line = ["git", "blame"]
+    cmd_line.extend(f"-L {l},/^$/" for l in lines_list)
+    cmd_line.append(filename)
+    try:
+        result = run(cmd_line, capture_output=True, text=True, check=True)
+    except CalledProcessError as exc:
+        print(exc.stderr, file=sys.stderr)
+        return
+    if grep_colors:
+        print(colorize(result.stdout, pattern, grep_colors))
+    else:
+        print(result.stdout)
 
 
 def main():
     """Command line entry point."""
     args = parse_args()
-    if args.color == "auto":
-        args.color = sys.stdout.isatty()
-    else:
-        args.color = args.color != "never"
     if args.color:
         grep_colors = GrepColors()
         try:
@@ -311,12 +351,6 @@ def main():
             pass
     else:
         grep_colors = None
-    if args.fixed_strings:
-        args.pattern = regex.escape(args.pattern)
-    if args.word_regexp:
-        args.pattern = r"\b" + args.pattern + r"\b"
-    if args.ignore_case:
-        args.pattern = r"(?i)" + args.pattern
     files = process_path(args.path, args.recursive)
     if args.exclude_dir:
         files = [f for f in files if args.exclude_dir.rstrip(os.sep) + os.sep not in f]
@@ -324,6 +358,19 @@ def main():
     if not args.no_messages:
         for error in errors:
             print(error, file=sys.stderr)
+    if args.blame:
+        current_file = ""
+        lines_list = []
+        for res in results:
+            if res.file != current_file:
+                if current_file:
+                    run_git(lines_list, current_file, args.pattern, grep_colors)
+                current_file = res.file
+                lines_list = []
+            lines_list.append(res.line)
+        if lines_list:
+            run_git(lines_list, current_file, args.pattern, grep_colors)
+        return
     display_results(
         results,
         args.pattern,
