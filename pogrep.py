@@ -136,14 +136,12 @@ def find_in_po(
 
 def display_results(
     matches: Sequence[Match],
-    pattern: str,
-    line_number: bool,
-    files_with_matches: bool,
+    args: argparse.Namespace,
     grep_colors: GrepColors,
 ):
     """Display matches as a colorfull table."""
     files = {match.file for match in matches}
-    if files_with_matches:  # Just print filenames
+    if args.files_with_matches:  # Just print filenames
         for file in files:
             if grep_colors:
                 print(grep_colors.start("fn") + file + grep_colors.NO_COLOR)
@@ -155,9 +153,9 @@ def display_results(
     term_width = get_terminal_size()[0]
     for match in matches:
         left = match.msgid
-        if line_number:
+        if args.line_number:
             pnum = str(match.line) + ":"
-            if len(files) > 1:
+            if args.print_filenames:
                 pfile = match.file + ":"
             else:
                 pfile = ""
@@ -172,7 +170,10 @@ def display_results(
     if grep_colors:
         print(
             colorize(
-                tabulate(table, tablefmt="fancy_grid"), pattern, grep_colors, prefixes
+                tabulate(table, tablefmt="fancy_grid"),
+                args.pattern,
+                grep_colors,
+                prefixes,
             )
         )
     else:
@@ -318,6 +319,7 @@ def main():
     if args.ignore_case:
         args.pattern = r"(?i)" + args.pattern
     files = process_path(args.path, args.recursive)
+    args.print_filenames = len(files) > 1
     if args.exclude_dir:
         files = [f for f in files if args.exclude_dir.rstrip(os.sep) + os.sep not in f]
     errors, results = find_in_po(args.pattern, files, args.no_source, args.translation)
@@ -326,9 +328,7 @@ def main():
             print(error, file=sys.stderr)
     display_results(
         results,
-        args.pattern,
-        args.line_number,
-        args.files_with_matches,
+        args,
         grep_colors,
     )
 
