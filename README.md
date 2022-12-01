@@ -22,6 +22,10 @@ Search the word 'typo' in traductions, but not in sources:
 
 `pogrep --recursive --translation --no-source --word-regexp typo `
 
+Blame usage of 'allogène' in traductions:
+
+`pogrep --recursive --ignore-case  --blame allogène `
+
 
 ## Contributing
 
