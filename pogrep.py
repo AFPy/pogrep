@@ -1,7 +1,7 @@
 """Find translations examples by grepping in .po files.
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 import argparse
 import glob
